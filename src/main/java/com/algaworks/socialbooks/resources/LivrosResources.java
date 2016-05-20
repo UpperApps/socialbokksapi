@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,8 +25,9 @@ public class LivrosResources {
 	private LivrosRepository livrosRepository;
 
 	@RequestMapping(method = RequestMethod.GET)
-	public List<Livro> listar() {
-		return livrosRepository.findAll();
+	public ResponseEntity<List<Livro>> listar() {
+		
+		return ResponseEntity.status(HttpStatus.OK).body(livrosRepository.findAll());
 	}
 	
 	@RequestMapping(method = RequestMethod.POST)
@@ -35,7 +37,9 @@ public class LivrosResources {
 		
 		// Monta o URI que será retornada para o cliente, no cabeçalho HTTP. 
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
-				.path("/{id}").buildAndExpand(livro.getId()).toUri();
+				.path("/{id}")
+				.buildAndExpand(livro.getId())
+				.toUri();
 		
 		return ResponseEntity.created(uri).build();
 	}
@@ -47,20 +51,30 @@ public class LivrosResources {
 		Livro livro = livrosRepository.findOne(id);
 		
 		if (livro == null) {
+			//Retorna o erro 404 Not Found.
 			return ResponseEntity.notFound().build();
 		}
-		
+
 		return ResponseEntity.status(HttpStatus.OK).body(livro);
 	}
 	
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-	public void deletar(@PathVariable("id") Long id){
-		livrosRepository.delete(id);
+	public ResponseEntity<Void> deletar(@PathVariable("id") Long id){
+		try {
+			livrosRepository.delete(id);	
+		} catch (EmptyResultDataAccessException e) {
+			return ResponseEntity.notFound().build();
+		}
+		//Retorna a resposta 204, mostrando que tudo foi processado normalmente e
+		//que nada foi retornado.
+		return ResponseEntity.noContent().build();
 	}
 	
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-	public void atualizar(@RequestBody Livro livro, @PathVariable("id") Long id){
+	public ResponseEntity<Void> atualizar(@RequestBody Livro livro, @PathVariable("id") Long id){
 		livro.setId(id);
 		livrosRepository.save(livro);
+		
+		return ResponseEntity.noContent().build();
 	}
 }
