@@ -15,25 +15,26 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.algaworks.socialbooks.domain.Livro;
-import com.algaworks.socialbooks.repository.LivrosRepository;
+import com.algaworks.socialbooks.services.LivrosService;
+import com.algaworks.socialbooks.services.exceptions.LivroNaoEncontradoException;
 
 @RestController
 @RequestMapping("/livros")
 public class LivrosResources {
 
 	@Autowired
-	private LivrosRepository livrosRepository;
+	private LivrosService livrosService;
 
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<List<Livro>> listar() {
 		
-		return ResponseEntity.status(HttpStatus.OK).body(livrosRepository.findAll());
+		return ResponseEntity.status(HttpStatus.OK).body(livrosService.listar());
 	}
 	
 	@RequestMapping(method = RequestMethod.POST)
 	public ResponseEntity<Void> salvar(@RequestBody Livro livro) {
 		//O método save sempre retorna o objeto salvo. 
-		livro = livrosRepository.save(livro);
+		livro = livrosService.salvar(livro);
 		
 		// Monta o URI que será retornada para o cliente, no cabeçalho HTTP. 
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -48,9 +49,10 @@ public class LivrosResources {
 	public ResponseEntity<?> buscar(@PathVariable("id") Long id){
 		//A classe ResponseEntity é um builder que permite retornar respostas
 		//ao cliente para seu devido tratamento.
-		Livro livro = livrosRepository.findOne(id);
-		
-		if (livro == null) {
+		Livro livro = null;
+		try {
+			livro = livrosService.buscar(id);	
+		} catch (LivroNaoEncontradoException e) {
 			//Retorna o erro 404 Not Found.
 			return ResponseEntity.notFound().build();
 		}
@@ -61,8 +63,8 @@ public class LivrosResources {
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public ResponseEntity<Void> deletar(@PathVariable("id") Long id){
 		try {
-			livrosRepository.delete(id);	
-		} catch (EmptyResultDataAccessException e) {
+			livrosService.deletar(id);	
+		} catch (LivroNaoEncontradoException e) {
 			return ResponseEntity.notFound().build();
 		}
 		//Retorna a resposta 204, mostrando que tudo foi processado normalmente e
@@ -73,8 +75,12 @@ public class LivrosResources {
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<Void> atualizar(@RequestBody Livro livro, @PathVariable("id") Long id){
 		livro.setId(id);
-		livrosRepository.save(livro);
-		
+		try {
+			livrosService.salvar(livro);	
+		} catch (LivroNaoEncontradoException e) {
+			return ResponseEntity.notFound().build();
+		}
+				
 		return ResponseEntity.noContent().build();
 	}
 }
