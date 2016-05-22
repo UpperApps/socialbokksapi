@@ -49,24 +49,16 @@ public class LivrosResources {
 	public ResponseEntity<?> buscar(@PathVariable("id") Long id){
 		//A classe ResponseEntity é um builder que permite retornar respostas
 		//ao cliente para seu devido tratamento.
-		Livro livro = null;
-		try {
-			livro = livrosService.buscar(id);	
-		} catch (LivroNaoEncontradoException e) {
-			//Retorna o erro 404 Not Found.
-			return ResponseEntity.notFound().build();
-		}
-
+		Livro livro = livrosService.buscar(id);;
+		
 		return ResponseEntity.status(HttpStatus.OK).body(livro);
 	}
 	
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public ResponseEntity<Void> deletar(@PathVariable("id") Long id){
-		try {
-			livrosService.deletar(id);	
-		} catch (LivroNaoEncontradoException e) {
-			return ResponseEntity.notFound().build();
-		}
+		
+		livrosService.deletar(id);
+		
 		//Retorna a resposta 204, mostrando que tudo foi processado normalmente e
 		//que nada foi retornado.
 		return ResponseEntity.noContent().build();
@@ -75,11 +67,7 @@ public class LivrosResources {
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<Void> atualizar(@RequestBody Livro livro, @PathVariable("id") Long id){
 		livro.setId(id);
-		try {
-			livrosService.salvar(livro);	
-		} catch (LivroNaoEncontradoException e) {
-			return ResponseEntity.notFound().build();
-		}
+		livrosService.salvar(livro);
 				
 		return ResponseEntity.noContent().build();
 	}
