@@ -46,7 +46,6 @@ public class LivrosResources {
 		// A classe ResponseEntity é um builder que permite retornar respostas
 		// ao cliente para seu devido tratamento.
 		Livro livro = livrosService.buscar(id);
-		;
 
 		return ResponseEntity.status(HttpStatus.OK).body(livro);
 	}
