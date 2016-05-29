@@ -2,10 +2,12 @@ package com.algaworks.socialbooks.resources;
 
 import java.net.URI;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,8 +50,11 @@ public class LivrosResources {
 		// A classe ResponseEntity é um builder que permite retornar respostas
 		// ao cliente para seu devido tratamento.
 		Livro livro = livrosService.buscar(id);
+		
+		//Faz o cache do objeto no cliente por 20 segundos.
+		CacheControl cacheControl = CacheControl.maxAge(20, TimeUnit.SECONDS);
 
-		return ResponseEntity.status(HttpStatus.OK).body(livro);
+		return ResponseEntity.status(HttpStatus.OK).cacheControl(cacheControl).body(livro);
 	}
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
